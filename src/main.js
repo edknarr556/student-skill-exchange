@@ -1,3 +1,4 @@
+import './styles/theme.css';
 import './styles/base.css';
 import './styles/layout.css';
 import './styles/components.css';
@@ -10,6 +11,7 @@ import {
 } from './router.js';
 import { renderShell, mountShell } from './components/layout.js';
 import { initStore } from './store/state.js';
+import { applyTheme, watchSystemTheme } from './store/theme.js';
 
 import { renderDashboard, mountDashboard } from './pages/dashboard.js';
 import { renderBrowse, mountBrowse } from './pages/browse.js';
@@ -17,6 +19,13 @@ import { renderProfile, mountProfile } from './pages/profile.js';
 import { renderMessaging, mountMessaging } from './pages/messaging.js';
 import { renderRequests, mountRequests } from './pages/requests.js';
 import { renderSessions, mountSessions } from './pages/sessions.js';
+import { renderAppearance, mountAppearance } from './pages/appearance.js';
+
+// Apply the saved theme (the inline <head> script already did this before
+// paint; re-applying keeps the DOM authoritative) and follow the OS while
+// in system mode.
+applyTheme();
+watchSystemTheme();
 
 // Seed LocalStorage on first run.
 initStore();
@@ -33,6 +42,7 @@ registerRoutes([
   { path: '/sessions', render: renderSessions },
   { path: '/profile', render: renderProfile },
   { path: '/profile/:id', render: renderProfile },
+  { path: '/appearance', render: renderAppearance },
 ]);
 
 setNotFound(
@@ -53,6 +63,7 @@ const MOUNTS = {
   '/requests': mountRequests,
   '/sessions': mountSessions,
   '/profile': mountProfile,
+  '/appearance': mountAppearance,
 };
 
 function mountFor(path, params) {

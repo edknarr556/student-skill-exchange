@@ -30,7 +30,21 @@ export function initStore() {
 }
 
 export function resetDemo() {
+  // Appearance is a user preference, not demo data — preserve it across a reset.
+  let appearance = null;
+  try {
+    appearance = localStorage.getItem('sse:appearance');
+  } catch (e) {
+    /* ignore */
+  }
   clearAll();
+  if (appearance !== null) {
+    try {
+      localStorage.setItem('sse:appearance', appearance);
+    } catch (e) {
+      /* ignore */
+    }
+  }
   initStore();
 }
 

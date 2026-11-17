@@ -84,6 +84,7 @@ describe('mobile navigation drawer', () => {
       'Requests',
       'My Sessions',
       'My Profile',
+      'Appearance',
     ]);
   });
 

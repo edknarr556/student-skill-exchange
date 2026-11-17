@@ -21,6 +21,7 @@ const NAV = [
   { path: '/requests', label: 'Requests', icon: 'handshake', badge: 'pending' },
   { path: '/sessions', label: 'My Sessions', icon: 'calendar' },
   { path: '/profile', label: 'My Profile', icon: 'user' },
+  { path: '/appearance', label: 'Appearance', icon: 'palette' },
 ];
 
 /** Returns the full shell markup with `innerHtml` injected into the content. */

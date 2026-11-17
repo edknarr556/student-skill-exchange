@@ -29,6 +29,29 @@ Built with **Vite + vanilla HTML/CSS/JavaScript**. All prototype data lives in
   pending / confirmed / declined / completed states.
 - **My Sessions** — tabbed view of upcoming, pending, completed, and declined
   sessions with status indicators and per-session actions.
+- **Appearance** — theme **mode** (Light / Dark / System) and six curated
+  **colour presets** (Riverside Blue default, Midnight, Forest, Lavender,
+  Sunset, High Contrast). A live preview shows buttons, tags, a tutor card, and
+  an agreement status. Preferences persist in LocalStorage and are applied
+  before first paint (no flash of the default theme).
+
+### Theming
+
+All colour and shape values are CSS custom properties. Each preset redefines
+the full token set for light and dark in `src/styles/theme.css`, so switching a
+theme restyles every page consistently — including the required semantic tokens:
+`--bg`, `--surface`, `--text`, `--text-muted`, `--border`, `--primary`,
+`--primary-hover`, `--success`, `--warning`, `--danger` (plus `--on-primary`
+and `--focus-ring`).
+
+- Only curated palettes are selectable — there is no arbitrary-hex input, which
+  keeps every theme readable.
+- Every preset is authored to meet **WCAG AA** contrast (≥ 4.5:1 for normal
+  text, ≥ 3:1 for UI/focus indicators); this is enforced by
+  `tests/contrast.test.js` across all 12 preset × mode combinations.
+- The theme logic lives in `src/store/theme.js`; the resolved theme is written
+  to `<html>` as `data-theme-preset` + `data-theme` with a `theme-dark` class.
+- Appearance preferences survive a demo-data reset.
 
 ### Core business rule
 
@@ -85,6 +108,10 @@ Interaction and responsive behaviour are covered by a Vitest + jsdom suite in
 - `responsive.test.js` — the mobile drawer state machine (open/close via
   toggle, scrim, route selection, Escape), full nav labels, and the
   de-emphasised demo menu
+- `theme.test.js` — appearance persistence, system-theme fallback (incl.
+  live OS changes while in System mode), keyboard selection in the mode/preset
+  radiogroups, and the correct `data-theme*` attributes/class on `<html>`
+- `contrast.test.js` — WCAG AA contrast for every preset × mode
 
 Run them with `npm test`.
 
@@ -102,13 +129,15 @@ student-skill-exchange/
     ├── utils.js            # formatting + rendering helpers (dates, avatars, escaping)
     │
     ├── styles/
-    │   ├── base.css         # design tokens (navy/white/gray palette), reset, type
-    │   ├── layout.css       # app shell: sidebar, topbar, responsive breakpoints
-    │   └── components.css    # cards, buttons, badges, chat, modal, toast, etc.
+    │   ├── theme.css         # all colour/shape tokens per preset × light/dark
+    │   ├── base.css          # token note, reset, typography, focus ring
+    │   ├── layout.css        # app shell: sidebar, topbar, responsive breakpoints
+    │   └── components.css    # cards, buttons, badges, chat, modal, appearance, …
     │
     ├── store/
     │   ├── storage.js       # LocalStorage wrapper + change pub/sub
     │   ├── seed.js          # realistic sample students, sessions, chats
+    │   ├── theme.js         # appearance presets, persistence, apply, system watch
     │   └── state.js         # data access + ALL business logic (approval rule)
     │
     ├── components/          # reusable UI pieces (framework-free)
@@ -129,9 +158,11 @@ student-skill-exchange/
         ├── messaging.js
         ├── requests.js
         ├── sessions.js
+        ├── appearance.js    # theme mode + colour preset selectors + preview
         └── shared.js        # delegated action handlers shared across pages
 
-tests/                       # Vitest + jsdom interaction & responsive tests
+tests/                       # Vitest + jsdom tests (interaction, responsive,
+                             #   theme, contrast, state)
 ```
 
 ### Architecture notes

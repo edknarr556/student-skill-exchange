@@ -19,11 +19,17 @@ import { renderProfile, mountProfile } from '../src/pages/profile.js';
 import { renderMessaging, mountMessaging } from '../src/pages/messaging.js';
 import { renderRequests, mountRequests } from '../src/pages/requests.js';
 import { renderSessions, mountSessions } from '../src/pages/sessions.js';
+import {
+  renderAppearance,
+  mountAppearance,
+} from '../src/pages/appearance.js';
+import { applyTheme } from '../src/store/theme.js';
 
 let routesRegistered = false;
 
 export function bootApp(initialHash = '/') {
   initStore();
+  applyTheme(); // mirror main.js: apply saved/default theme on boot
 
   // Routes are global state in the router module; register them once.
   if (!routesRegistered) {
@@ -36,6 +42,7 @@ export function bootApp(initialHash = '/') {
       { path: '/sessions', render: renderSessions },
       { path: '/profile', render: renderProfile },
       { path: '/profile/:id', render: renderProfile },
+      { path: '/appearance', render: renderAppearance },
     ]);
     setNotFound(() => '<div class="page">not found</div>');
     routesRegistered = true;
@@ -46,6 +53,7 @@ export function bootApp(initialHash = '/') {
     '/browse': mountBrowse,
     '/requests': mountRequests,
     '/sessions': mountSessions,
+    '/appearance': mountAppearance,
   };
   // Re-bind the render callback each boot so it resolves the *current* #app
   // (the DOM is recreated between tests).
@@ -91,4 +99,21 @@ export function setViewport(width, height = 800) {
 /** Wait a macrotask so deferred (rAF/setTimeout 0) work completes. */
 export function tick(ms = 0) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Simulate the OS colour-scheme preference (backed by the matchMedia mock). */
+export function setSystemDark(isDark) {
+  globalThis.__systemDark = !!isDark;
+}
+
+/** Fire a system colour-scheme change to registered matchMedia listeners. */
+export function fireSystemThemeChange() {
+  globalThis.__fireSystemThemeChange?.();
+}
+
+/** Dispatch a Keydown on an element (defaults to the active element). */
+export function keydown(el, key, opts = {}) {
+  (el || document.activeElement).dispatchEvent(
+    new KeyboardEvent('keydown', { key, bubbles: true, ...opts })
+  );
 }
