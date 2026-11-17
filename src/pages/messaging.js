@@ -7,9 +7,11 @@ import {
   getConversations,
   getConversation,
   getStudent,
+  getSession,
   sendMessage,
   approveSession,
   declineSession,
+  restoreSession,
   addNotification,
   CURRENT_USER_ID,
 } from '../store/state.js';
@@ -237,26 +239,46 @@ export function mountMessaging(params) {
   view.querySelector('#chat-body')?.addEventListener('click', (e) => {
     const approveBtn = e.target.closest('[data-approve]');
     const declineBtn = e.target.closest('[data-decline]');
+    const btn = approveBtn || declineBtn;
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    const before = getSession(id);
+    if (!before) return;
+    const other = getStudent(
+      before.tutorId === CURRENT_USER_ID ? before.studentId : before.tutorId
+    );
+    const otherName = other?.name.split(' ')[0] || 'them';
+    const rerender = () => {
+      if (activeId) navigate(`/messages/${activeId}`);
+    };
+    const undo = () => {
+      restoreSession(before);
+      rerender();
+      toast('Change undone.', 'info');
+    };
+
     if (approveBtn) {
-      const updated = approveSession(approveBtn.dataset.id);
-      const other = getStudent(
-        updated.tutorId === CURRENT_USER_ID
-          ? updated.studentId
-          : updated.tutorId
-      );
+      const updated = approveSession(id);
       if (updated.status === 'confirmed') {
         addNotification(
-          `Session confirmed with ${other?.name.split(' ')[0]} — both approved.`
+          `Session confirmed with ${otherName} — both approved.`,
+          '/requests'
         );
-        toast('Both approved — session confirmed! 🎉', 'success');
+        toast(`Confirmed with ${otherName} — both approved. 🎉`, 'success', {
+          onUndo: undo,
+        });
       } else {
-        toast('You approved. Waiting on the other student.', 'info');
+        toast('You approved. Waiting on the other student.', 'info', {
+          onUndo: undo,
+        });
       }
-      if (activeId) navigate(`/messages/${activeId}`);
-    } else if (declineBtn) {
-      declineSession(declineBtn.dataset.id);
-      toast('Agreement declined.', 'warn');
-      if (activeId) navigate(`/messages/${activeId}`);
+    } else {
+      declineSession(id);
+      toast(`Declined the agreement with ${otherName}.`, 'warn', {
+        onUndo: undo,
+      });
     }
+    rerender();
   });
 }

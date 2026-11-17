@@ -117,22 +117,63 @@
 
 .sidebar__footer {
   margin-top: auto;
-  padding: 14px 12px 4px;
+  padding: 10px 6px 2px;
 }
-.sidebar__card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius);
-  padding: 14px;
+/* Subtle demo-mode trigger — deliberately quiet so it doesn't compete
+   with the primary navigation. */
+.demo-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 10px;
+  color: #8ea1cc;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background var(--ease), color var(--ease);
 }
-.sidebar__card h4 {
+.demo-trigger svg {
+  width: 15px;
+  height: 15px;
+  opacity: 0.7;
+}
+.demo-trigger:hover,
+.demo-trigger[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.07);
+  color: #d7e0f5;
+}
+.demo-trigger__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+/* Drawer close button — only visible in the mobile drawer. */
+.sidebar__close {
+  display: none;
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  color: #c3cde8;
+  align-items: center;
+  justify-content: center;
+}
+.sidebar__close:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  font-size: 0.86rem;
 }
-.sidebar__card p {
-  color: #9fb0d8;
-  font-size: 0.78rem;
-  margin: 4px 0 10px;
+
+.nav__text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- Main column ---------- */
@@ -325,6 +366,9 @@
 .scrim {
   display: none;
 }
+.scrim[hidden] {
+  display: none !important;
+}
 
 @media (max-width: 960px) {
   .dash-grid,
@@ -335,28 +379,63 @@
 }
 
 @media (max-width: 860px) {
+  /* Single column; the drawer overlays the content. Lock horizontal
+     overflow so the off-canvas sidebar can never widen the page. */
   .app-shell {
     grid-template-columns: 1fr;
+    overflow-x: hidden;
   }
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    width: 272px;
+    /* Never exceed the viewport; leave room so content peeks behind it. */
+    width: min(284px, calc(100vw - 48px));
+    max-width: 100vw;
+    padding: 18px 16px;
     transform: translateX(-100%);
     transition: transform 0.28s ease;
     box-shadow: var(--shadow-lg);
+    overflow-y: auto;
   }
   .app-shell.nav-open .sidebar {
     transform: translateX(0);
   }
-  .app-shell.nav-open .scrim {
+
+  .scrim {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(15, 36, 84, 0.45);
+    background: rgba(15, 36, 84, 0.5);
     z-index: 35;
-    animation: fadeIn 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
   }
+  .scrim[hidden] {
+    display: none !important;
+  }
+  .app-shell.nav-open .scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar__close {
+    display: inline-flex;
+  }
+  /* Keep the brand from pushing the close button off-screen. */
+  .brand {
+    padding: 2px 4px 18px;
+    gap: 10px;
+  }
+  .brand__name {
+    min-width: 0;
+  }
+
   .topbar__menu {
     display: grid;
   }
@@ -367,7 +446,22 @@
     padding: 20px 16px 48px;
   }
   .topbar {
-    padding: 0 16px;
+    padding: 0 14px;
+    gap: 10px;
+  }
+}
+
+/* Very narrow phones (≈320px): tighten the topbar and widen the drawer
+   proportionally so every nav label stays fully visible. */
+@media (max-width: 360px) {
+  .sidebar {
+    width: min(270px, calc(100vw - 36px));
+  }
+  .topbar__search {
+    max-width: none;
+  }
+  .nav__link {
+    padding: 10px 11px;
   }
 }
 

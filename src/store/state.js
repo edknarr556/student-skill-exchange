@@ -126,6 +126,18 @@ function saveSession(updated) {
 }
 
 /**
+ * Restore a previously captured session snapshot (used by Undo). Pass the
+ * object returned from getSession() before a mutation; this writes it back
+ * verbatim, reverting status + approvals in one shot.
+ */
+export function restoreSession(snapshot) {
+  if (!snapshot) return null;
+  const exists = getSession(snapshot.id);
+  if (!exists) return null;
+  return saveSession({ ...snapshot });
+}
+
+/**
  * Record an approval for `userId`. Returns the updated session.
  * BUSINESS RULE: the session only flips to "confirmed" when every
  * participant's approval is true. Until then it stays "pending".
@@ -234,14 +246,26 @@ export function markNotificationsRead() {
     getNotifications().map((n) => ({ ...n, read: true }))
   );
 }
-export function addNotification(text) {
+export function addNotification(text, link = null) {
   const n = {
     id: 'n-' + Date.now().toString(36),
     text,
+    link, // optional hash route, e.g. '/messages/c-diego'
     at: new Date().toISOString(),
     read: false,
   };
   write(KEYS.notifications, [n, ...getNotifications()]);
+}
+
+/** Resolve a sensible destination for a notification that lacks an explicit link. */
+export function notificationLink(n) {
+  if (n.link) return n.link;
+  const t = (n.text || '').toLowerCase();
+  if (t.includes('approv') || t.includes('agreement') || t.includes('confirm'))
+    return '/requests';
+  if (t.includes('replied') || t.includes('message')) return '/messages';
+  if (t.includes('session')) return '/sessions';
+  return '/';
 }
 
 /* -------------------------------------------------------- derived helpers */

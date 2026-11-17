@@ -10,12 +10,19 @@ import {
   declineSession,
   completeSession,
   reopenSession,
+  restoreSession,
   getSession,
   counterpartId,
   ensureConversation,
   getStudent,
   addNotification,
 } from '../store/state.js';
+
+/** Re-render the current route (used after a mutation). */
+function rerender(onChange) {
+  if (onChange) onChange();
+  else navigate(window.location.hash.slice(1) || '/');
+}
 
 /** Tutor card buttons: view profile + request session. */
 export function bindTutorActions(view) {
@@ -34,7 +41,9 @@ export function bindTutorActions(view) {
 
 /**
  * Session row buttons: approve / decline / complete / reopen / open chat.
- * `onChange` (optional) is called after a mutation so the page can re-render.
+ * Each reversible action captures a snapshot and offers an inline Undo via
+ * the toast. `onChange` (optional) is called after a mutation so the page can
+ * re-render.
  */
 export function bindSessionActions(view, onChange) {
   view.addEventListener('click', (e) => {
@@ -43,10 +52,17 @@ export function bindSessionActions(view, onChange) {
     );
     if (!btn) return;
     const id = btn.dataset.id;
-    const session = getSession(id);
-    if (!session) return;
-    const other = getStudent(counterpartId(session));
+    const before = getSession(id);
+    if (!before) return;
+    const other = getStudent(counterpartId(before));
     const otherName = other ? other.name.split(' ')[0] : 'them';
+    const wasCancel = before.status === 'pending'; // decline on a pending = cancel
+
+    const undo = () => {
+      restoreSession(before);
+      rerender(onChange);
+      toast('Change undone.', 'info');
+    };
 
     if (btn.hasAttribute('data-approve')) {
       const updated = approveSession(id);
@@ -54,26 +70,35 @@ export function bindSessionActions(view, onChange) {
         addNotification(
           `Session confirmed with ${otherName} — both of you approved.`
         );
-        toast('Both approved — session confirmed! 🎉', 'success');
+        toast(`Confirmed with ${otherName} — both approved. 🎉`, 'success', {
+          onUndo: undo,
+        });
       } else {
-        toast('You approved. Waiting on the other student.', 'info');
+        toast('You approved. Waiting on the other student.', 'info', {
+          onUndo: undo,
+        });
       }
     } else if (btn.hasAttribute('data-decline')) {
       declineSession(id);
-      toast('Request declined.', 'warn');
+      toast(
+        wasCancel
+          ? `Request to ${otherName} cancelled.`
+          : `Declined ${otherName}'s request.`,
+        'warn',
+        { onUndo: undo }
+      );
     } else if (btn.hasAttribute('data-complete')) {
       completeSession(id);
-      toast('Nice — session marked as completed.', 'success');
+      toast('Session marked as completed.', 'success', { onUndo: undo });
     } else if (btn.hasAttribute('data-reopen')) {
       reopenSession(id);
-      toast('Re-sent your request.', 'info');
+      toast(`Re-sent your request to ${otherName}.`, 'info', { onUndo: undo });
     } else if (btn.hasAttribute('data-open-chat')) {
-      const convoId = ensureConversation(counterpartId(session));
+      const convoId = ensureConversation(counterpartId(before));
       navigate(`/messages/${convoId}`);
       return;
     }
 
-    if (onChange) onChange();
-    else navigate(window.location.hash.slice(1) || '/'); // re-render current route
+    rerender(onChange);
   });
 }
