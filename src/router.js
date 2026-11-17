@@ -2,6 +2,8 @@
  * Minimal hash-based router. Routes are registered as patterns with optional
  * `:param` segments. The matched render function receives (params, query).
  */
+import { closeAllOverlays } from './components/overlay.js';
+
 const routes = [];
 let notFound = () => '<div class="page"><h1>Not found</h1></div>';
 let onChange = null;
@@ -64,6 +66,10 @@ function match(pathParts) {
 }
 
 function handle() {
+  // Any navigation — including browser back/forward (which also fire
+  // `hashchange`) — tears down every transient surface first.
+  closeAllOverlays();
+
   const hash = window.location.hash.slice(1) || '/';
   const path = hash.split('?')[0] || '/';
   const query = parseQuery(hash);
@@ -78,8 +84,12 @@ function handle() {
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
 
+let started = false;
 export function startRouter() {
-  window.addEventListener('hashchange', handle);
+  if (!started) {
+    window.addEventListener('hashchange', handle);
+    started = true;
+  }
   if (!window.location.hash) window.location.hash = '/';
   else handle();
 }

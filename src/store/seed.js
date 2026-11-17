@@ -5,7 +5,7 @@
  */
 
 export const CURRENT_USER_ID = 'u-me';
-export const DATA_VERSION = 3;
+export const DATA_VERSION = 4;
 
 // Days used for availability + scheduling helpers
 export const SUBJECTS = [
@@ -385,9 +385,9 @@ export function buildSeed() {
   ];
 
   const notifications = [
-    { id: 'n1', text: 'Diego approved the agreement — your confirmation is needed', at: minsAgo(40), read: false },
-    { id: 'n2', text: 'Priya replied about your Organic Chemistry request', at: hoursAgo(5.5), read: false },
-    { id: 'n3', text: 'Your Linear Algebra session with Amara is confirmed', at: hoursAgo(48), read: true },
+    { id: 'n1', text: 'Diego approved the agreement — your confirmation is needed', link: '/messages/c-diego', at: minsAgo(40), read: false },
+    { id: 'n2', text: 'Priya replied about your Organic Chemistry request', link: '/messages/c-priya', at: hoursAgo(5.5), read: false },
+    { id: 'n3', text: 'Your Linear Algebra session with Amara is confirmed', link: '/sessions', at: hoursAgo(48), read: true },
   ];
 
   return { students, sessions, conversations, notifications };

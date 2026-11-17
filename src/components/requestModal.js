@@ -41,7 +41,7 @@ export function openRequestModal(tutorId, presetSkill) {
 
       <div class="field">
         <label class="field__label" for="rf-skill">Skill you need help with</label>
-        <select class="select" id="rf-skill" name="skill">
+        <select class="select" id="rf-skill" name="skill" data-autofocus>
           ${options(teachSkills, defaultSkill)}
         </select>
       </div>
@@ -64,23 +64,29 @@ export function openRequestModal(tutorId, presetSkill) {
         </div>
       </div>
 
-      <label class="field__label">How would you like to pay?</label>
-      <div class="choice-row mb">
-        <label class="choice is-selected" data-choice="money">
-          ${icon('dollar')}
-          <span><strong>Monetary payment</strong><small>Pay the tutor's hourly rate</small></span>
-        </label>
-        <label class="choice" data-choice="exchange" ${
-          tutor.openToExchange ? '' : 'style="opacity:.5;pointer-events:none"'
-        }>
-          ${icon('swap')}
-          <span><strong>Skill exchange</strong><small>${
-            tutor.openToExchange
-              ? 'Trade a skill of your own'
-              : 'Not offered by this tutor'
-          }</small></span>
-        </label>
-      </div>
+      <fieldset class="field choice-fieldset">
+        <legend class="field__label">How would you like to pay?</legend>
+        <div class="choice-row mb">
+          <label class="choice is-selected" for="rf-pay-money">
+            <input class="choice__radio" type="radio" id="rf-pay-money"
+              name="payType" value="money" checked />
+            ${icon('dollar')}
+            <span><strong>Monetary payment</strong><small>Pay the tutor's hourly rate</small></span>
+          </label>
+          <label class="choice" for="rf-pay-exchange">
+            <input class="choice__radio" type="radio" id="rf-pay-exchange"
+              name="payType" value="exchange" ${
+                tutor.openToExchange ? '' : 'disabled'
+              } />
+            ${icon('swap')}
+            <span><strong>Skill exchange</strong><small>${
+              tutor.openToExchange
+                ? 'Trade a skill of your own'
+                : 'Not offered by this tutor'
+            }</small></span>
+          </label>
+        </div>
+      </fieldset>
 
       <div class="field" data-pay="money">
         <label class="field__label" for="rf-price">Offer amount (USD)</label>
@@ -133,23 +139,28 @@ export function openRequestModal(tutorId, presetSkill) {
     body,
     footer,
     onMount(rootEl, close) {
-      let payType = 'money';
-      const choices = rootEl.querySelectorAll('[data-choice]');
-      choices.forEach((c) => {
-        c.addEventListener('click', () => {
-          payType = c.dataset.choice;
-          choices.forEach((x) =>
-            x.classList.toggle('is-selected', x === c)
-          );
-          rootEl.querySelector('[data-pay="money"]').hidden = payType !== 'money';
-          rootEl.querySelector('[data-pay="exchange"]').hidden =
-            payType !== 'exchange';
-        });
-      });
+      const form = rootEl.querySelector('#request-form');
+      const radios = rootEl.querySelectorAll('input[name="payType"]');
+      const moneyField = rootEl.querySelector('[data-pay="money"]');
+      const exchangeField = rootEl.querySelector('[data-pay="exchange"]');
 
-      rootEl.querySelector('#rf-submit').addEventListener('click', () => {
-        const form = rootEl.querySelector('#request-form');
+      function syncPayType() {
+        const payType =
+          rootEl.querySelector('input[name="payType"]:checked')?.value ||
+          'money';
+        // Reflect selection on the label cards for the visual state.
+        radios.forEach((r) =>
+          r.closest('.choice').classList.toggle('is-selected', r.checked)
+        );
+        moneyField.hidden = payType !== 'money';
+        exchangeField.hidden = payType !== 'exchange';
+      }
+      radios.forEach((r) => r.addEventListener('change', syncPayType));
+      syncPayType();
+
+      function submit() {
         const fd = new FormData(form);
+        const payType = fd.get('payType') || 'money';
         const skill = fd.get('skill');
         const subject =
           (tutor.skillsTeach.find((s) => s.skill === skill) || {}).subject ||
@@ -157,6 +168,10 @@ export function openRequestModal(tutorId, presetSkill) {
         const whenVal = fd.get('when');
         if (!whenVal) {
           toast('Please choose a date and time.', 'warn');
+          return;
+        }
+        if (payType === 'exchange' && !fd.get('exchange')) {
+          toast('Add a skill to your profile to offer a swap.', 'warn');
           return;
         }
 
@@ -174,11 +189,24 @@ export function openRequestModal(tutorId, presetSkill) {
 
         const convoId = postAgreementMessage(session);
         addNotification(
-          `You proposed a ${skill} session to ${firstName(tutor.name)}`
+          `You proposed a ${skill} session to ${firstName(tutor.name)}`,
+          `/messages/${convoId}`
         );
         close();
-        toast('Proposal sent! Negotiate and confirm in chat.', 'success');
+        toast(
+          `Proposal sent to ${firstName(
+            tutor.name
+          )} — negotiate and confirm in chat.`,
+          'success'
+        );
         navigate(`/messages/${convoId}`);
+      }
+
+      // Submit via button click or Enter key within the form.
+      rootEl.querySelector('#rf-submit').addEventListener('click', submit);
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submit();
       });
     },
   });

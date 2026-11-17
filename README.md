@@ -60,13 +60,33 @@ Then open the URL Vite prints (default: http://localhost:5173).
 ```bash
 npm run build     # production build into dist/
 npm run preview   # serve the production build locally
+npm test          # run the interaction + responsive test suite (Vitest)
+npm run test:watch
 ```
 
 ### Resetting the demo data
 
 Sample students, chats, and sessions are seeded into LocalStorage on first run.
-Use **“Reset demo data”** in the sidebar to restore the original sample content
-at any time. (Clearing the browser's site data has the same effect.)
+The app runs in a clearly marked **Demo mode**: open the subtle *Demo mode*
+control at the bottom of the sidebar and choose **Reset demo data…** to restore
+the original sample content (a confirmation guards this destructive action).
+Clearing the browser's site data has the same effect.
+
+### Tests
+
+Interaction and responsive behaviour are covered by a Vitest + jsdom suite in
+`tests/`:
+
+- `state.test.js` — session business logic, including the dual-approval rule
+  and the snapshot/restore that powers Undo
+- `interaction.test.js` — route-safe transient UI (dialogs/panels/menus close
+  on navigation), accessible dialog (focus restore, Escape, ARIA), semantic
+  radio payment selection, interactive notifications, and action feedback/Undo
+- `responsive.test.js` — the mobile drawer state machine (open/close via
+  toggle, scrim, route selection, Escape), full nav labels, and the
+  de-emphasised demo menu
+
+Run them with `npm test`.
 
 ---
 
@@ -92,10 +112,11 @@ student-skill-exchange/
     │   └── state.js         # data access + ALL business logic (approval rule)
     │
     ├── components/          # reusable UI pieces (framework-free)
-    │   ├── layout.js         # sidebar + topbar shell, notifications
+    │   ├── layout.js         # sidebar + topbar shell, notifications, demo menu
+    │   ├── overlay.js        # transient-UI registry + focus trap helpers
     │   ├── icons.js          # inline SVG icon set
-    │   ├── toast.js          # toast notifications
-    │   ├── modal.js          # reusable modal dialog
+    │   ├── toast.js          # toast notifications (with optional Undo)
+    │   ├── modal.js          # accessible modal dialog (focus trap + restore)
     │   ├── tutorCard.js      # tutor card (Browse + Dashboard)
     │   ├── sessionCard.js    # session list row with contextual actions
     │   ├── agreementCard.js  # in-chat agreement card + approve/decline
@@ -109,6 +130,8 @@ student-skill-exchange/
         ├── requests.js
         ├── sessions.js
         └── shared.js        # delegated action handlers shared across pages
+
+tests/                       # Vitest + jsdom interaction & responsive tests
 ```
 
 ### Architecture notes
@@ -123,6 +146,14 @@ student-skill-exchange/
 - **Separation of concerns.** Presentation helpers live in `utils.js`,
   persistence in `store/storage.js`, domain logic in `store/state.js`, and
   reusable UI in `components/`.
+- **Route-safe transient UI.** Every dialog, popover, and the mobile drawer
+  registers a close handler in `components/overlay.js`. The router calls
+  `closeAllOverlays()` on every navigation (including browser back/forward), so
+  no transient surface can survive a route change.
+- **Accessibility.** Dialogs trap focus, close on Escape, are labelled via
+  `aria-labelledby`, and restore focus to their opener. Icon-only controls carry
+  `aria-label`s, the payment choice uses a real radio-group `<fieldset>`, and
+  the mobile drawer exposes `aria-expanded`/`aria-controls`.
 
 ---
 

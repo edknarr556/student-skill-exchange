@@ -11,4 +11,11 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
   },
+  // Vitest config: jsdom environment for DOM/interaction tests.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.js'],
+    include: ['tests/**/*.test.js'],
+  },
 });
