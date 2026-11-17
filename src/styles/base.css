@@ -1,66 +1,11 @@
 /* ============================================================
-   Design tokens — navy / white / light gray + subtle accents
+   Design tokens
+   ------------------------------------------------------------
+   All colour + shape tokens are defined per theme in
+   styles/theme.css (imported before this file). The default
+   :root block there is the original Riverside Blue palette, so
+   the app looks identical until a different theme is chosen.
    ============================================================ */
-:root {
-  /* Brand */
-  --navy-900: #0f2454;
-  --navy-800: #16305f;
-  --navy-700: #1e3a8a;
-  --navy-600: #2447a3;
-  --navy-500: #3457c4;
-
-  /* Accents */
-  --sky: #38bdf8;
-  --sky-soft: #e0f2fe;
-  --teal: #0ea5a4;
-  --amber: #f59e0b;
-  --amber-soft: #fef3c7;
-  --green: #16a34a;
-  --green-soft: #dcfce7;
-  --red: #dc2626;
-  --red-soft: #fee2e2;
-  --violet: #7c3aed;
-  --violet-soft: #ede9fe;
-
-  /* Neutrals */
-  --white: #ffffff;
-  --gray-50: #f7f8fb;
-  --gray-100: #eef1f6;
-  --gray-200: #e2e7ef;
-  --gray-300: #cfd6e2;
-  --gray-400: #9aa6b8;
-  --gray-500: #6b7688;
-  --gray-600: #4a5366;
-  --gray-700: #323a4b;
-  --gray-900: #141a26;
-
-  /* Semantic */
-  --bg: var(--gray-50);
-  --surface: var(--white);
-  --text: var(--gray-900);
-  --text-muted: var(--gray-500);
-  --border: var(--gray-200);
-
-  /* Shape & motion */
-  --radius-sm: 8px;
-  --radius: 14px;
-  --radius-lg: 20px;
-  --radius-pill: 999px;
-
-  --shadow-xs: 0 1px 2px rgba(15, 36, 84, 0.06);
-  --shadow-sm: 0 2px 8px rgba(15, 36, 84, 0.07);
-  --shadow-md: 0 8px 24px rgba(15, 36, 84, 0.10);
-  --shadow-lg: 0 18px 48px rgba(15, 36, 84, 0.16);
-
-  --ease: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-  --sidebar-w: 256px;
-  --topbar-h: 68px;
-  --maxw: 1240px;
-
-  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
-}
 
 /* ============================================================
    Reset
@@ -121,7 +66,7 @@ ul {
 }
 
 :focus-visible {
-  outline: 2px solid var(--navy-500);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

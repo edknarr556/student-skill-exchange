@@ -21,6 +21,50 @@
       rel="stylesheet"
     />
     <title>Student Skill Exchange</title>
+    <!--
+      Apply the saved theme before first paint to avoid a flash of the
+      default theme. Kept inline + minimal on purpose; the canonical logic
+      lives in src/store/theme.js and re-applies on boot.
+    -->
+    <script>
+      (function () {
+        try {
+          var VALID_PRESETS = [
+            'riverside',
+            'midnight',
+            'forest',
+            'lavender',
+            'sunset',
+            'contrast',
+          ];
+          var VALID_MODES = ['light', 'dark', 'system'];
+          var saved = {};
+          try {
+            saved = JSON.parse(localStorage.getItem('sse:appearance')) || {};
+          } catch (e) {}
+          var preset =
+            VALID_PRESETS.indexOf(saved.preset) !== -1
+              ? saved.preset
+              : 'riverside';
+          var mode =
+            VALID_MODES.indexOf(saved.mode) !== -1 ? saved.mode : 'system';
+          var resolved =
+            mode === 'system'
+              ? window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+              : mode;
+          var root = document.documentElement;
+          root.setAttribute('data-theme-preset', preset);
+          root.setAttribute('data-theme', resolved);
+          if (resolved === 'dark') root.classList.add('theme-dark');
+          root.style.colorScheme = resolved;
+        } catch (e) {
+          /* fall back to default Riverside Blue */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
